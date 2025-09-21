@@ -1,0 +1,11 @@
+/build
+/dist
+/*.egg
+/*.egg-info
+/**/__pycache__/
+*.pyc
+/.cache
+/_docs
+/venv*
+/_tmp
+Thumbs.db

@@ -1,0 +1,170 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Verify Hotel Form Data</title>
+    <style>
+      body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 2rem; }
+      .card { max-width: 800px; padding: 1.25rem; border: 1px solid #e5e7eb; border-radius: 12px; }
+      .row { margin-bottom: 1rem; }
+      label { display: block; font-weight: 600; margin-bottom: .5rem; }
+      input[type="text"], input[type="date"], select { 
+        display: block; 
+        width: 100%; 
+        padding: 0.5rem; 
+        border: 1px solid #d1d5db; 
+        border-radius: 6px; 
+        font-size: 14px;
+      }
+      button { 
+        background: #111827; 
+        color: #fff; 
+        padding: .6rem 1rem; 
+        border-radius: 8px; 
+        border: none; 
+        cursor: pointer; 
+        margin-right: 10px;
+      }
+      .preview { 
+        background: #f9fafb; 
+        padding: 1rem; 
+        border-radius: 8px; 
+        margin-bottom: 1rem; 
+      }
+      .muted { color: #6b7280; }
+      .section { margin-bottom: 2rem; }
+      .section h3 { color: #374151; border-bottom: 1px solid #e5e7eb; padding-bottom: 0.5rem; }
+      .two-column { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+      .paper-size { background: #f3f4f6; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <h1>Verify Hotel Form Data</h1>
+      
+      {% if uploaded_file and is_image %}
+        <div class="preview">
+          <h3>Uploaded Image Preview</h3>
+          <img src="{{ uploaded_url }}" alt="Uploaded preview" style="max-width:200px;height:auto;border:1px solid #e5e7eb;border-radius:8px;" />
+        </div>
+      {% endif %}
+
+      <form method="post" action="{% url 'download_hotel_form' %}">
+        {% csrf_token %}
+        
+        <div class="section">
+          <h3>Personal Information</h3>
+          <div class="row">
+            <label for="surname">Nom (Surname)</label>
+            <input type="text" id="surname" name="surname" value="{{ mrz_data.surname }}" required />
+          </div>
+          <div class="row">
+            <label for="names">Prenom (First Name)</label>
+            <input type="text" id="names" name="names" value="{{ mrz_data.names }}" required />
+          </div>
+          <div class="row">
+            <label for="birth_date">Date de naissance (Date of Birth)</label>
+            <input type="text" id="birth_date" name="birth_date" value="{{ mrz_data.date_of_birth_formatted }}" required />
+          </div>
+          <div class="row">
+            <label for="nationality">Nationalité (Nationality)</label>
+            <input type="text" id="nationality" name="nationality" value="{{ mrz_data.nationality }}" required />
+          </div>
+        </div>
+
+        <div class="section">
+          <h3>Document Information</h3>
+          <div class="row">
+            <label for="doc_type">Document Type</label>
+            <select id="doc_type" name="doc_type" required>
+              <option value="P<" {% if mrz_data.type == "P<" %}selected{% endif %}>Passport</option>
+              <option value="ID" {% if mrz_data.type == "ID" %}selected{% endif %}>ID Card</option>
+              <option value="CIN" {% if mrz_data.type == "CIN" %}selected{% endif %}>C.I.N</option>
+              <option value="RES" {% if mrz_data.type == "RES" %}selected{% endif %}>Residence Card</option>
+            </select>
+          </div>
+          <div class="row">
+            <label for="doc_number">Document Number</label>
+            <input type="text" id="doc_number" name="doc_number" value="{{ mrz_data.number }}" required />
+          </div>
+        </div>
+
+        <div class="section">
+          <h3>Hotel Information</h3>
+          <div class="row">
+            <label for="residence">Domicile Habituel (Usual Residence)</label>
+            <input type="text" id="residence" name="residence" placeholder="Enter your usual residence" />
+          </div>
+          <div class="two-column">
+            <div class="row">
+              <label for="arrival_date">Date d'arrivée (Arrival Date)</label>
+              <input type="date" id="arrival_date" name="arrival_date" />
+            </div>
+            <div class="row">
+              <label for="room_number">N° de chambre (Room Number)</label>
+              <input type="text" id="room_number" name="room_number" placeholder="e.g., 101" />
+            </div>
+          </div>
+          <div class="row">
+            <label for="children_count">Nombre d'enfants mineurs (Number of minor children)</label>
+            <input type="text" id="children_count" name="children_count" placeholder="e.g., 2" />
+          </div>
+          <div class="row">
+            <label for="accompanying">Accompagnant le client (Accompanying the client)</label>
+            <input type="text" id="accompanying" name="accompanying" placeholder="Name of accompanying person" />
+          </div>
+          <div class="two-column">
+            <div class="row">
+              <label for="origin">Lieu de Provenance (Place of Origin)</label>
+              <input type="text" id="origin" name="origin" placeholder="e.g., Paris" />
+            </div>
+            <div class="row">
+              <label for="destination">Destination</label>
+              <input type="text" id="destination" name="destination" placeholder="e.g., Casablanca" />
+            </div>
+          </div>
+          <div class="row">
+            <label for="date_signed">Fait a Tanger, le (Date Signed)</label>
+            <input type="date" id="date_signed" name="date_signed" />
+          </div>
+        </div>
+
+        <div class="paper-size">
+          <h3>Paper Size</h3>
+          <div class="row">
+            <label>
+              <input type="radio" name="paper_size" value="A4" checked /> A4 (Standard - 210mm x 297mm)
+            </label>
+            <label>
+              <input type="radio" name="paper_size" value="A6" /> A6 (Compact - 105mm x 148mm)
+            </label>
+            <label>
+              <input type="radio" name="paper_size" value="YOUGATA6" /> Yougata 6 (Tall - 98mm x 190mm)
+            </label>
+          </div>
+          <div class="muted">
+            <strong>A4:</strong> Standard size for detailed forms<br>
+            <strong>A6:</strong> Compact size for quick registration<br>
+            <strong>Yougata 6:</strong> Tall format with more vertical space
+          </div>
+        </div>
+
+        <div style="margin-top: 2rem;">
+          <button type="submit">Generate & Download PDF</button>
+          <button type="button" onclick="window.history.back()" style="background: #6b7280;">Go Back</button>
+        </div>
+      </form>
+
+      <div class="muted" style="margin-top: 2rem;">
+        <p><strong>Instructions:</strong></p>
+        <ul>
+          <li>Review and correct any extracted information above</li>
+          <li>Fill in the hotel-specific information</li>
+          <li>Choose your preferred paper size (A4, A6, or Yougata 6)</li>
+          <li>Click "Generate & Download PDF" to create the form</li>
+        </ul>
+      </div>
+    </div>
+  </body>
+</html>

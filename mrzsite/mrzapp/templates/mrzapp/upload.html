@@ -1,0 +1,96 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>MRZ Extractor</title>
+    <style>
+      body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 2rem; }
+      .card { max-width: 720px; padding: 1.25rem; border: 1px solid #e5e7eb; border-radius: 12px; }
+      .row { margin-bottom: 1rem; }
+      label { display: block; font-weight: 600; margin-bottom: .5rem; }
+      input[type="file"] { display: block; }
+      button { background: #111827; color: #fff; padding: .6rem 1rem; border-radius: 8px; border: none; cursor: pointer; }
+      pre { background: #111827; color: #fff; padding: 1rem; border-radius: 8px; overflow: auto; }
+      .muted { color: #6b7280; }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <h1>MRZ Extractor</h1>
+      <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="row">
+          <label for="image">Upload passport/ID image</label>
+          <input id="image" name="image" type="file" accept="image/*,application/pdf" required />
+        </div>
+        <div class="row">
+          <label><input type="checkbox" name="legacy" /> Use legacy OCR (recommended)</label>
+          <div class="muted">If results are weak, enable this to use Tesseract legacy engine.</div>
+        </div>
+        <div class="row">
+          <label><input type="checkbox" name="morocco" /> Moroccan ID mode</label>
+          <div class="muted">Tries Moroccan ID parsing; upload the card side with the MRZ (back side).</div>
+        </div>
+        <button type="submit">Extract MRZ</button>
+      </form>
+
+      {% if error %}
+        <p style="color:#b91c1c;">{{ error }}</p>
+      {% endif %}
+
+      {% if result %}
+        <h2>Result</h2>
+        {% if uploaded_file %}
+          <p class="muted">Uploaded fille: {{ uploaded_file }}</p>
+          <div style="margin: 0.5rem 0 1rem;">
+            {% if is_image %}
+              <img src="{{ uploaded_url }}" alt="Uploaded preview" style="max-width:100%;height:auto;border:1px solid #e5e7eb;border-radius:8px;" />
+            {% else %}
+              <a href="{{ uploaded_url }}" target="_blank">Download uploaded file</a>
+            {% endif %}
+          </div>
+        {% endif %}
+        <pre>{{ result|json_script:"mrzjson" }}</pre>
+        <div>
+          <p><strong>Date of birth:</strong> {{ result.date_of_birth_formatted|default:result.date_of_birth }}</p>
+          <p><strong>Expiration date:</strong> {{ result.expiration_date_formatted|default:result.expiration_date }}</p>
+          <p><strong>Nationality:</strong> {{ result.nationality }}</p>
+          <p><strong>Number:</strong> {{ result.number }}</p>
+          <p><strong>Sex:</strong> {{ result.sex }}</p>
+          <p><strong>Names:</strong> {{ result.names }}</p>
+          <p><strong>Surname:</strong> {{ result.surname }}</p>
+          <p class="muted">Legacy engine: {{ used_legacy }}</p>
+          
+        </div>
+
+        <h3 style="margin-top:2rem;">Edit for Hotel Form</h3>
+        <form method="post" style="display:grid; grid-template-columns: 1fr 1fr; gap: 12px; align-items:end;">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="pdf_from_form" />
+          <label>Nom : <input name="nom" value="{{ hotel.nom }}" /></label>
+          <label>Prenome : <input name="prenome" value="{{ hotel.prenome }}" /></label>
+          <label>Date de naissance : <input type="date" name="date_naissance" value="{{ hotel.date_naissance_iso }}" /></label>
+          <label>Nationalité : <input name="nationalite" value="{{ hotel.nationalite }}" /></label>
+          <label>C.I.N : <input name="cin" value="{{ hotel.cin }}" /></label>
+          <label>Carte de séjour : <input name="carte_sejour" value="{{ hotel.carte_sejour }}" /></label>
+          <label>D’entrée Au Maroc : <input name="entree_maroc" value="{{ hotel.entree_maroc }}" /></label>
+          <label>Passeport N° : <input name="passeport_num" value="{{ hotel.passeport_num }}" /></label>
+          <label style="grid-column: span 2;">Domicile Habituel :<input name="domicile" value="{{ hotel.domicile }}" /></label>
+          <label>Date d’arrivée : <input type="date" name="date_arrivee" value="{{ hotel.date_arrivee_iso }}" /></label>
+          <label>N° de chambre : <input name="num_chambre" value="{{ hotel.num_chambre }}" placeholder="N° chambre" /></label>
+          <label style="grid-column: span 2;">N° d’enfants mineurs accompagnant le client : <input name="nb_enfants" value="{{ hotel.nb_enfants }}" /></label>
+          <label>Lieu de Provenance : <input name="provenance" value="{{ hotel.provenance }}" /></label>
+          <label>Destination : <input name="destination" value="{{ hotel.destination }}" /></label>
+          <label>Fait à : <input name="fait_a" value="{{ hotel.fait_a }}" /></label>
+          <label>Le : <input type="date" name="fait_le" value="{{ hotel.fait_le_iso }}" /></label>
+          <div style="grid-column: span 2; margin-top:.5rem;">
+            <button type="submit" style="background:#047857;color:#fff;padding:.6rem 1rem;border-radius:8px;border:none;cursor:pointer;">Download Yougata 6 PDF (Edited)</button>
+          </div>
+        </form>
+      {% endif %}
+    </div>
+  </body>
+  </html>
+
+
